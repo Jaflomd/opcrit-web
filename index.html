@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OPCRIT+ Web</title>
+<style>
+:root {
+  --bg:#f1f5f9;--card:#fff;--border:#e2e8f0;--text:#1e293b;--muted:#64748b;--primary:#4f46e5;
+  --primary-hover:#4338ca;--green:#059669;--green-hover:#047857;--red:#dc2626;--amber:#d97706;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);line-height:1.5}
+button{cursor:pointer;font-family:inherit}
+.topbar{background:var(--card);border-bottom:1px solid var(--border);padding:12px 20px;position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.topbar h1{font-size:1.1rem;font-weight:700;display:flex;align-items:center;gap:8px}
+.topbar .tag{font-size:.65rem;background:#eef2ff;color:var(--primary);padding:2px 8px;border-radius:10px;font-weight:600}
+.topbar .sub{font-size:.7rem;color:var(--muted)}
+.btn{padding:8px 18px;border-radius:8px;font-size:.82rem;font-weight:500;border:1px solid var(--border);background:var(--card);color:var(--text);transition:all .15s}
+.btn:hover{background:#f8fafc}
+.btn-primary{background:var(--primary);color:#fff;border-color:var(--primary)}
+.btn-primary:hover{background:var(--primary-hover)}
+.btn-green{background:var(--green);color:#fff;border-color:var(--green)}
+.btn-green:hover{background:var(--green-hover)}
+.btn-red{background:var(--red);color:#fff;border-color:var(--red)}
+.btn-sm{padding:5px 12px;font-size:.75rem}
+.wrap{max-width:1100px;margin:0 auto;padding:20px}
+
+/* Cases table */
+.cases-empty{background:var(--card);border:2px dashed var(--border);border-radius:16px;padding:60px 20px;text-align:center}
+.cases-empty p{color:var(--muted);margin-bottom:16px}
+table{width:100%;border-collapse:collapse;font-size:.85rem}
+table th{text-align:left;padding:10px 16px;font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);background:#f8fafc;border-bottom:1px solid var(--border)}
+table td{padding:10px 16px;border-bottom:1px solid #f1f5f9}
+table tr:hover td{background:#f8fafc}
+.dx-chip{display:inline-block;padding:1px 6px;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;border-radius:4px;font-size:.72rem;font-family:monospace;margin:1px}
+.mod-chip{display:inline-block;padding:1px 6px;background:#ecfdf5;color:#047857;border-radius:4px;font-size:.72rem;margin:1px}
+.link{color:var(--primary);font-size:.78rem;cursor:pointer;border:none;background:none;font-weight:500}
+.link:hover{text-decoration:underline}
+.link-red{color:var(--red)}
+
+/* Form layout */
+.form-layout{display:flex;gap:0;min-height:calc(100vh - 60px)}
+.sidebar{width:200px;flex-shrink:0;padding:16px 12px;position:sticky;top:56px;align-self:flex-start;max-height:calc(100vh - 56px);overflow-y:auto}
+.sidebar button{width:100%;text-align:left;padding:8px 12px;border-radius:8px;border:none;background:none;font-size:.78rem;color:var(--muted);margin-bottom:2px;display:flex;justify-content:space-between;align-items:center;transition:all .12s}
+.sidebar button:hover{background:#e2e8f0}
+.sidebar button.active{background:var(--primary);color:#fff;font-weight:600}
+.sidebar button.active .cnt{color:#c7d2fe}
+.sidebar .cnt{font-size:.7rem;font-family:monospace}
+.form-main{flex:1;padding:24px;max-width:720px}
+.form-card{background:var(--card);border-radius:12px;border:1px solid var(--border);padding:28px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.sec-title{font-size:1.1rem;font-weight:700;margin-bottom:4px}
+.sec-sub{font-size:.75rem;color:var(--muted);margin-bottom:24px}
+.form-nav{display:flex;justify-content:space-between;margin-top:32px;padding-top:20px;border-top:1px solid #f1f5f9}
+.progress-mini{display:flex;align-items:center;gap:8px;margin-top:4px}
+.progress-mini .bar{width:120px;height:5px;background:#e2e8f0;border-radius:3px;overflow:hidden}
+.progress-mini .bar-fill{height:100%;background:var(--primary);border-radius:3px;transition:width .3s}
+.progress-mini span{font-size:.72rem;color:var(--muted)}
+
+/* Items */
+.item-group{margin:20px 0 8px;font-size:.82rem;font-weight:500;color:var(--text);padding:4px 0}
+.chk{display:flex;align-items:center;gap:10px;padding:10px 12px;margin:2px 0;border-radius:8px;cursor:pointer;user-select:none;transition:background .12s}
+.chk:hover{background:#f8fafc}
+.chk.on{background:#eff6ff}
+.chk .box{width:22px;height:22px;border-radius:5px;border:2px solid #cbd5e1;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .12s;font-size:13px;color:#fff;font-weight:700}
+.chk.on .box{background:#4f46e5;border-color:#4f46e5}
+.chk.on .box::after{content:'\2713'}
+.chk.unk{background:#fefce8}
+.chk.unk .box{background:#d97706;border-color:#d97706;font-size:11px}
+.chk.unk .box::after{content:'?'}
+.chk .lbl{font-size:.86rem;flex:1}
+.chk .tip{font-size:.68rem;color:#93c5fd;cursor:help;flex-shrink:0}
+.chk .unk-btn{width:22px;height:22px;border-radius:50%;border:1px solid #e2e8f0;background:#f8fafc;color:var(--muted);font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .12s;cursor:pointer}
+.chk .unk-btn:hover{border-color:#d97706;color:#d97706}
+.field-row{display:flex;align-items:center;gap:12px;padding:10px 0;flex-wrap:wrap}
+.field-row .lbl{font-size:.86rem;flex:1 1 260px;min-width:0}
+.field-row input[type=number]{width:80px;border:1px solid var(--border);border-radius:6px;padding:6px 8px;font-size:.85rem}
+.pill-group{display:flex;gap:4px;flex-wrap:wrap}
+.pill{padding:5px 12px;border:1px solid var(--border);border-radius:16px;background:#f8fafc;font-size:.78rem;cursor:pointer;transition:all .12s;user-select:none;white-space:nowrap}
+.pill:hover{border-color:#93c5fd;background:#eff6ff}
+.pill.on{background:var(--primary);color:#fff;border-color:var(--primary);font-weight:500}
+.long-field{margin:8px 0}
+.long-field .lbl{font-size:.86rem;margin-bottom:6px;font-weight:500}
+.long-field textarea{width:100%;min-height:120px;border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:.85rem;font-family:inherit;line-height:1.6;resize:vertical;transition:border-color .15s}
+.long-field textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(79,70,229,.1)}
+.long-field textarea::placeholder{color:#94a3b8}
+
+/* Results */
+.res-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.res-card{background:var(--card);border-radius:12px;border:1px solid var(--border);padding:20px}
+.res-card h3{font-size:.95rem;font-weight:700;margin-bottom:12px}
+.dx-item{padding:10px 12px;border-radius:8px;margin-bottom:8px;border-left:4px solid}
+.dx-item.probable{border-color:#6366f1;background:#eef2ff}
+.dx-item.posible{border-color:#f59e0b;background:#fffbeb}
+.dx-item .code{font-family:monospace;font-size:.78rem;font-weight:700;color:var(--muted)}
+.dx-item .name{font-size:.85rem;margin-top:2px}
+.dx-item .conf{font-size:.68rem;padding:1px 8px;border-radius:8px;display:inline-block}
+.dx-item .conf.probable{background:#e0e7ff;color:#4338ca}
+.dx-item .conf.posible{background:#fef3c7;color:#92400e}
+.summary-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px}
+.summary-grid .stat{font-size:.72rem;color:var(--muted)}
+.summary-grid .val{font-size:.88rem;font-weight:600}
+.mod-badge{padding:6px 14px;border-radius:8px;font-size:.82rem;font-weight:500;border:1px solid var(--border);display:inline-block;margin:3px}
+.mod-badge.active{color:#fff;border-color:transparent}
+.warn{font-size:.72rem;color:var(--muted);margin-top:20px;line-height:1.6}
+
+/* Modal */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;z-index:200}
+.modal{background:var(--card);border-radius:12px;padding:24px;max-width:380px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.15)}
+.modal h3{font-size:1rem;font-weight:600;margin-bottom:8px}
+.modal p{font-size:.85rem;color:var(--muted);margin-bottom:20px}
+.modal .actions{display:flex;gap:8px;justify-content:flex-end}
+
+@media(max-width:768px){
+  .form-layout{flex-direction:column}
+  .sidebar{width:100%;position:static;max-height:none;display:flex;flex-wrap:wrap;gap:4px;padding:12px}
+  .sidebar button{width:auto}
+  .res-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+// ══════════════════════════════════════════════════════════
+// DATA MODEL (from JSX)
+// ══════════════════════════════════════════════════════════
+
+const ITEMS = [
+  // MOTIVO DE CONSULTA
+  {id:"mc_motivo",sec:"mc",label:"Motivo de consulta",type:"long",ph:"Por que acude el paciente? Quien lo trae? Motivo principal..."},
+  {id:"mc_relato",sec:"mc",label:"Relato de la enfermedad actual",type:"long",ph:"Narrativa cronologica del episodio actual: inicio, evolucion, sintomas principales, factores precipitantes, tratamientos previos..."},
+  {id:"mc_antpsiq",sec:"mc",label:"Antecedentes psiquiatricos relevantes",type:"long",ph:"Episodios previos, hospitalizaciones, tratamientos, respuesta a farmacos..."},
+  {id:"mc_antmed",sec:"mc",label:"Antecedentes medicos relevantes",type:"long",ph:"Enfermedades medicas, cirugias, medicacion actual..."},
+  {id:"mc_antfam",sec:"mc",label:"Antecedentes familiares (narrativa)",type:"long",ph:"Historia familiar de enfermedad mental, suicidio, sustancias..."},
+  {id:"mc_social",sec:"mc",label:"Historia social y biografica",type:"long",ph:"Nacimiento, desarrollo, escolaridad, relaciones, trabajo, vivienda, red de apoyo, eventos vitales..."},
+
+  // DEMOGRAFICOS
+  {id:"sex",sec:"dem",label:"Sexo",type:"sel",opts:["Masculino","Femenino","Otro/No especificado"]},
+  {id:"age",sec:"dem",label:"Edad (anos)",type:"num",min:0,max:120},
+  {id:"education",sec:"dem",label:"Anos de educacion",type:"num",min:0,max:30},
+  {id:"marital",sec:"dem",label:"Estado civil",type:"sel",opts:["Soltero/a","Casado/a o conviviente","Separado/a o divorciado/a","Viudo/a"]},
+  {id:"employment",sec:"dem",label:"Situacion laboral",type:"sel",opts:["Empleado/a","Desempleado/a","Estudiante","Jubilado/a","Incapacidad laboral","Otro"]},
+
+  // HISTORIA CLINICA
+  {id:"age_onset",sec:"hx",label:"Edad de inicio de sintomas (anos)",type:"num",min:0,max:120},
+  {id:"dur_illness",sec:"hx",label:"Duracion total de la enfermedad (meses)",type:"num",min:0},
+  {id:"course",sec:"hx",label:"Curso de la enfermedad",type:"sel",opts:["Episodico con recuperacion completa","Episodico con deficit residual","Continuo/cronico","Episodio unico","Desconocido"]},
+  {id:"fam_psy",sec:"hx",label:"Antecedentes familiares de psicosis",type:"sel",opts:["Ninguno","Familiar 1er grado","Familiar 2do grado","Desconocido"]},
+  {id:"fam_aff",sec:"hx",label:"Antecedentes familiares de t. afectivo",type:"sel",opts:["Ninguno","Familiar 1er grado","Familiar 2do grado","Desconocido"]},
+  {id:"premorbid",sec:"hx",label:"Funcionamiento premorbido",type:"sel",opts:["Bueno","Regular","Pobre","Desconocido"]},
+
+  // CRIBADO
+  {id:"scr_psy",sec:"scr",label:"Sintomas psicoticos presentes (alucinaciones, delirios, desorganizacion, catatonia)?",type:"bool"},
+  {id:"scr_man",sec:"scr",label:"Episodios de animo elevado, euforico o irritable de forma anormal (posible mania/hipomania)?",type:"bool"},
+  {id:"scr_dep",sec:"scr",label:"Episodios depresivos mayores (>=2 semanas con animo deprimido o anhedonia)?",type:"bool"},
+  {id:"scr_anx",sec:"scr",label:"Sintomas de ansiedad clinicamente significativos?",type:"bool"},
+  {id:"scr_sub",sec:"scr",label:"Uso problematico de alcohol u otras sustancias?",type:"bool"},
+  {id:"scr_per",sec:"scr",label:"Patron persistente y disfuncional de personalidad (desde adultez temprana)?",type:"bool"},
+  {id:"scr_cog",sec:"scr",label:"Deterioro cognitivo o demencia?",type:"bool"},
+
+  // PSICOSIS
+  {id:"h_aud3",sec:"psy",label:"Alucinaciones auditivas en 3a persona (voces discuten o comentan sobre el paciente)",type:"bool",show:r=>r.scr_psy===true,tip:"Criterio 1er rango Schneider"},
+  {id:"h_audrun",sec:"psy",label:"Voces que comentan en tiempo real las acciones del paciente (running commentary)",type:"bool",show:r=>r.scr_psy===true,tip:"Criterio 1er rango Schneider"},
+  {id:"h_aud2",sec:"psy",label:"Alucinaciones auditivas en 2a persona (voces se dirigen al paciente)",type:"bool",show:r=>r.scr_psy===true},
+  {id:"h_vis",sec:"psy",label:"Alucinaciones visuales",type:"bool",show:r=>r.scr_psy===true},
+  {id:"h_other",sec:"psy",label:"Alucinaciones tactiles, olfativas o gustativas",type:"bool",show:r=>r.scr_psy===true},
+  {id:"d_control",sec:"psy",label:"Delirios de control / fenomenos de pasividad (fuerzas externas controlan mente/cuerpo)",type:"bool",show:r=>r.scr_psy===true,tip:"Criterio 1er rango Schneider"},
+  {id:"d_insert",sec:"psy",label:"Insercion del pensamiento",type:"bool",show:r=>r.scr_psy===true,tip:"Criterio 1er rango Schneider"},
+  {id:"d_withd",sec:"psy",label:"Robo del pensamiento",type:"bool",show:r=>r.scr_psy===true,tip:"Criterio 1er rango Schneider"},
+  {id:"d_broad",sec:"psy",label:"Difusion del pensamiento",type:"bool",show:r=>r.scr_psy===true,tip:"Criterio 1er rango Schneider"},
+  {id:"d_persec",sec:"psy",label:"Delirios persecutorios",type:"bool",show:r=>r.scr_psy===true},
+  {id:"d_ref",sec:"psy",label:"Delirios de referencia",type:"bool",show:r=>r.scr_psy===true},
+  {id:"d_grand",sec:"psy",label:"Delirios de grandiosidad",type:"bool",show:r=>r.scr_psy===true},
+  {id:"d_nihil",sec:"psy",label:"Delirios nihilistas / de ruina / de culpa",type:"bool",show:r=>r.scr_psy===true},
+  {id:"d_soma",sec:"psy",label:"Delirios somaticos / hipocondríacos",type:"bool",show:r=>r.scr_psy===true},
+  {id:"d_biz",sec:"psy",label:"Delirios bizarros (imposibles fisicamente)",type:"bool",show:r=>r.scr_psy===true},
+  {id:"td_incoh",sec:"psy",label:"Incoherencia / descarrilamiento grave del pensamiento",type:"bool",show:r=>r.scr_psy===true},
+  {id:"td_loose",sec:"psy",label:"Laxitud de asociaciones / tangencialidad",type:"bool",show:r=>r.scr_psy===true},
+  {id:"neg_flat",sec:"psy",label:"Aplanamiento / embotamiento afectivo",type:"bool",show:r=>r.scr_psy===true},
+  {id:"neg_avol",sec:"psy",label:"Abulia / apatia",type:"bool",show:r=>r.scr_psy===true},
+  {id:"neg_anhed",sec:"psy",label:"Anhedonia",type:"bool",show:r=>r.scr_psy===true},
+  {id:"neg_alog",sec:"psy",label:"Alogia / pobreza del habla",type:"bool",show:r=>r.scr_psy===true},
+  {id:"neg_soc",sec:"psy",label:"Retraimiento social",type:"bool",show:r=>r.scr_psy===true},
+  {id:"catatonia",sec:"psy",label:"Sintomas catatonicos (estupor, catalepsia, mutismo, ecopraxia)",type:"bool",show:r=>r.scr_psy===true},
+  {id:"disorg",sec:"psy",label:"Comportamiento gravemente desorganizado o bizarro",type:"bool",show:r=>r.scr_psy===true},
+  {id:"p_dur_wk",sec:"psy",label:"Duracion de sintomas psicoticos activos (semanas)",type:"num",min:0,show:r=>r.scr_psy===true},
+  {id:"p_dysf",sec:"psy",label:"Disfuncion social/laboral/autocuidado significativa",type:"bool",show:r=>r.scr_psy===true},
+  {id:"p_subst",sec:"psy",label:"Los sintomas psicoticos son atribuibles a sustancias o causa medica?",type:"bool",show:r=>r.scr_psy===true},
+
+  // MANIA
+  {id:"m_elev",sec:"man",label:"Animo anormalmente elevado, euforico o expansivo",type:"bool",show:r=>r.scr_man===true},
+  {id:"m_irr",sec:"man",label:"Animo anormalmente irritable (si no hay euforia clara)",type:"bool",show:r=>r.scr_man===true},
+  {id:"m_grand",sec:"man",label:"Grandiosidad o autoestima inflada",type:"bool",show:r=>r.scr_man===true},
+  {id:"m_sleep",sec:"man",label:"Disminucion de la necesidad de dormir (descansado con menos horas)",type:"bool",show:r=>r.scr_man===true},
+  {id:"m_speech",sec:"man",label:"Habla acelerada / presionada",type:"bool",show:r=>r.scr_man===true},
+  {id:"m_racing",sec:"man",label:"Pensamiento acelerado / fuga de ideas",type:"bool",show:r=>r.scr_man===true},
+  {id:"m_distr",sec:"man",label:"Distractibilidad aumentada",type:"bool",show:r=>r.scr_man===true},
+  {id:"m_activ",sec:"man",label:"Aumento de actividad orientada a metas o agitacion psicomotriz",type:"bool",show:r=>r.scr_man===true},
+  {id:"m_risk",sec:"man",label:"Conductas de riesgo (gasto excesivo, hipersexualidad, inversiones imprudentes)",type:"bool",show:r=>r.scr_man===true},
+  {id:"m_dur",sec:"man",label:"Duracion del episodio mas grave (dias)",type:"num",min:0,show:r=>r.scr_man===true},
+  {id:"m_hosp",sec:"man",label:"Requirio hospitalizacion psiquiatrica por el episodio?",type:"bool",show:r=>r.scr_man===true},
+  {id:"m_psych",sec:"man",label:"Hubo caracteristicas psicoticas durante el episodio maniaco?",type:"bool",show:r=>r.scr_man===true},
+  {id:"m_dysf",sec:"man",label:"Deterioro funcional grave durante el episodio",type:"bool",show:r=>r.scr_man===true},
+
+  // DEPRESION
+  {id:"dep_mood",sec:"dep",label:"Animo deprimido la mayor parte del tiempo (>=2 semanas)",type:"bool",show:r=>r.scr_dep===true},
+  {id:"dep_anhed",sec:"dep",label:"Perdida marcada de interes o placer (anhedonia)",type:"bool",show:r=>r.scr_dep===true},
+  {id:"dep_wt",sec:"dep",label:"Cambio significativo de peso/apetito (>5% en un mes)",type:"bool",show:r=>r.scr_dep===true},
+  {id:"dep_sleep",sec:"dep",label:"Insomnio o hipersomnia",type:"bool",show:r=>r.scr_dep===true},
+  {id:"dep_pm",sec:"dep",label:"Agitacion o enlentecimiento psicomotriz observable",type:"bool",show:r=>r.scr_dep===true},
+  {id:"dep_fat",sec:"dep",label:"Fatiga o perdida de energia",type:"bool",show:r=>r.scr_dep===true},
+  {id:"dep_worth",sec:"dep",label:"Sentimientos de inutilidad o culpa excesiva",type:"bool",show:r=>r.scr_dep===true},
+  {id:"dep_conc",sec:"dep",label:"Dificultad para concentrarse o tomar decisiones",type:"bool",show:r=>r.scr_dep===true},
+  {id:"dep_si",sec:"dep",label:"Pensamientos recurrentes de muerte o ideacion suicida",type:"bool",show:r=>r.scr_dep===true},
+  {id:"dep_dur",sec:"dep",label:"Duracion del episodio mas grave (semanas)",type:"num",min:0,show:r=>r.scr_dep===true},
+  {id:"dep_psych",sec:"dep",label:"Caracteristicas psicoticas durante el episodio depresivo",type:"bool",show:r=>r.scr_dep===true},
+  {id:"dep_dysf",sec:"dep",label:"Deterioro funcional grave durante el episodio",type:"bool",show:r=>r.scr_dep===true},
+  {id:"dep_mel",sec:"dep",label:"Caracteristicas melancolicas (peor de manana, despertar precoz, anhedonia pervasiva)",type:"bool",show:r=>r.scr_dep===true},
+  {id:"dep_recur",sec:"dep",label:"Ha habido mas de un episodio depresivo?",type:"bool",show:r=>r.scr_dep===true},
+
+  // ANSIEDAD
+  {id:"anx_panic",sec:"anx",label:"Ataques de panico recurrentes e inesperados",type:"bool",show:r=>r.scr_anx===true},
+  {id:"anx_antcp",sec:"anx",label:"Ansiedad anticipatoria o cambios conductuales por miedo a nuevos ataques",type:"bool",show:r=>r.anx_panic===true},
+  {id:"anx_agora",sec:"anx",label:"Agorafobia (miedo a situaciones donde escapar podria ser dificil)",type:"bool",show:r=>r.scr_anx===true},
+  {id:"anx_social",sec:"anx",label:"Fobia social / t. de ansiedad social",type:"bool",show:r=>r.scr_anx===true},
+  {id:"anx_specif",sec:"anx",label:"Fobia especifica (objeto o situacion concreta)",type:"bool",show:r=>r.scr_anx===true},
+  {id:"anx_gad",sec:"anx",label:"Preocupacion excesiva e incontrolable sobre multiples temas (>=6 meses)",type:"bool",show:r=>r.scr_anx===true},
+  {id:"anx_gad_n",sec:"anx",label:"No. sintomas TAG (fatiga, tension, irritabilidad, insomnio, concentracion, inquietud)",type:"sel",opts:["0","1","2","3","4","5","6"],show:r=>r.anx_gad===true},
+  {id:"anx_ocd_o",sec:"anx",label:"Obsesiones (pensamientos/imagenes/impulsos intrusivos reconocidos como propios)",type:"bool",show:r=>r.scr_anx===true},
+  {id:"anx_ocd_c",sec:"anx",label:"Compulsiones (rituales para neutralizar ansiedad)",type:"bool",show:r=>r.scr_anx===true},
+  {id:"anx_trauma",sec:"anx",label:"Exposicion a evento traumatico (muerte/amenaza/lesion/violencia sexual)",type:"bool",show:r=>r.scr_anx===true},
+  {id:"ptsd_reexp",sec:"anx",label:"Re-experimentacion del trauma (flashbacks, pesadillas, angustia ante recordatorios)",type:"bool",show:r=>r.anx_trauma===true},
+  {id:"ptsd_avd",sec:"anx",label:"Evitacion persistente de estimulos relacionados con el trauma",type:"bool",show:r=>r.anx_trauma===true},
+  {id:"ptsd_cog",sec:"anx",label:"Alteraciones cognitivo-afectivas negativas persistentes relacionadas al trauma",type:"bool",show:r=>r.anx_trauma===true},
+  {id:"ptsd_arous",sec:"anx",label:"Hiperactivacion: hipervigilancia, respuesta de sobresalto exagerada",type:"bool",show:r=>r.anx_trauma===true},
+  {id:"ptsd_dur",sec:"anx",label:"Duracion de sintomas TEPT (meses)",type:"num",min:0,show:r=>r.anx_trauma===true&&r.ptsd_reexp===true},
+
+  // SUSTANCIAS
+  {id:"sub_alc",sec:"sub",label:"Alcohol: uso problematico",type:"bool",show:r=>r.scr_sub===true},
+  {id:"sub_can",sec:"sub",label:"Cannabis: uso problematico",type:"bool",show:r=>r.scr_sub===true},
+  {id:"sub_stim",sec:"sub",label:"Estimulantes (cocaina, anfetaminas...): uso problematico",type:"bool",show:r=>r.scr_sub===true},
+  {id:"sub_opio",sec:"sub",label:"Opioides: uso problematico",type:"bool",show:r=>r.scr_sub===true},
+  {id:"sub_sed",sec:"sub",label:"Sedantes / hipnoticos / ansioliticos: uso problematico",type:"bool",show:r=>r.scr_sub===true},
+  {id:"sub_other",sec:"sub",label:"Otras sustancias: uso problematico",type:"bool",show:r=>r.scr_sub===true},
+  {id:"sub_tol",sec:"sub",label:"Tolerancia (necesita mas cantidad para mismo efecto)",type:"bool",show:r=>r.scr_sub===true},
+  {id:"sub_with",sec:"sub",label:"Sindrome de abstinencia al cesar o reducir",type:"bool",show:r=>r.scr_sub===true},
+  {id:"sub_ctrl",sec:"sub",label:"Perdida de control sobre el consumo",type:"bool",show:r=>r.scr_sub===true},
+  {id:"sub_socd",sec:"sub",label:"Deterioro social/laboral por el consumo",type:"bool",show:r=>r.scr_sub===true},
+  {id:"sub_psy",sec:"sub",label:"Psicosis inducida por sustancias (sintomas psicoticos directamente por intox./abstinencia)",type:"bool",show:r=>r.scr_sub===true&&r.scr_psy===true},
+
+  // PERSONALIDAD
+  {id:"per_early",sec:"per",label:"Patron presente desde adultez temprana o adolescencia",type:"bool",show:r=>r.scr_per===true},
+  {id:"per_perv",sec:"per",label:"Patron inflexible y generalizado (afecta multiples contextos)",type:"bool",show:r=>r.scr_per===true},
+  {id:"per_A_par",sec:"per",label:"Cluster A — Paranoide: desconfianza y suspicacia pervasivas",type:"bool",show:r=>r.scr_per===true},
+  {id:"per_A_szd",sec:"per",label:"Cluster A — Esquizoide: desapego social, rango afectivo restringido",type:"bool",show:r=>r.scr_per===true},
+  {id:"per_A_szt",sec:"per",label:"Cluster A — Esquizotipico: distorsiones cognitivo-perceptuales, excentricidad",type:"bool",show:r=>r.scr_per===true},
+  {id:"per_B_ast",sec:"per",label:"Cluster B — Antisocial: violacion de derechos ajenos (c/historial disocial previo)",type:"bool",show:r=>r.scr_per===true},
+  {id:"per_B_bpd",sec:"per",label:"Cluster B — Limite (BPD): inestabilidad relacional/afectiva, impulsividad, miedo al abandono",type:"bool",show:r=>r.scr_per===true},
+  {id:"per_B_his",sec:"per",label:"Cluster B — Histrionico: emotividad excesiva, busqueda de atencion",type:"bool",show:r=>r.scr_per===true},
+  {id:"per_B_nar",sec:"per",label:"Cluster B — Narcisista: grandiosidad, necesidad de admiracion, falta de empatia",type:"bool",show:r=>r.scr_per===true},
+  {id:"per_C_avd",sec:"per",label:"Cluster C — Evitativo: inhibicion social, sentimientos de inadecuacion",type:"bool",show:r=>r.scr_per===true},
+  {id:"per_C_dep",sec:"per",label:"Cluster C — Dependiente: necesidad excesiva de cuidado, comportamiento sumiso",type:"bool",show:r=>r.scr_per===true},
+  {id:"per_C_ocp",sec:"per",label:"Cluster C — TOCP: preocupacion por orden, perfeccionismo, control interpersonal",type:"bool",show:r=>r.scr_per===true},
+
+  // COGNITIVO
+  {id:"cog_mem",sec:"cog",label:"Deterioro de la memoria (especialmente para informacion nueva)",type:"bool",show:r=>r.scr_cog===true},
+  {id:"cog_ori",sec:"cog",label:"Desorientacion (tiempo, lugar o persona)",type:"bool",show:r=>r.scr_cog===true},
+  {id:"cog_lang",sec:"cog",label:"Dificultades del lenguaje (anomia, afasia, parafasias)",type:"bool",show:r=>r.scr_cog===true},
+  {id:"cog_exec",sec:"cog",label:"Disfuncion ejecutiva (planificacion, juicio, abstraccion)",type:"bool",show:r=>r.scr_cog===true},
+  {id:"cog_onset",sec:"cog",label:"Inicio del deterioro",type:"sel",opts:["Agudo (horas-dias)","Subagudo (semanas)","Insidioso (meses-anos)","Desconocido"],show:r=>r.scr_cog===true},
+  {id:"cog_fluct",sec:"cog",label:"Curso fluctuante (mejor en algunos momentos, peor en otros)",type:"bool",show:r=>r.scr_cog===true},
+  {id:"cog_prog",sec:"cog",label:"Curso progresivo (empeora con el tiempo)",type:"bool",show:r=>r.scr_cog===true},
+  {id:"cog_cons",sec:"cog",label:"Alteracion del nivel / contenido de conciencia",type:"bool",show:r=>r.scr_cog===true},
+
+  // EXAMEN MENTAL NARRATIVO
+  {id:"mse_apariencia",sec:"mse",label:"Apariencia y conducta",type:"long",ph:"Vestimenta, higiene, actitud, contacto visual, psicomotricidad, cooperacion..."},
+  {id:"mse_habla",sec:"mse",label:"Habla",type:"long",ph:"Tono, velocidad, volumen, prosodia, latencia, espontaneidad..."},
+  {id:"mse_animo",sec:"mse",label:"Animo y afecto",type:"long",ph:"Animo subjetivo (lo que dice el paciente) y afecto observado (rango, reactividad, congruencia, estabilidad)..."},
+  {id:"mse_pensamiento",sec:"mse",label:"Forma y contenido del pensamiento",type:"long",ph:"Curso (lineal, tangencial, circunstancial, fuga de ideas, disgregado...), contenido (preocupaciones, ideas sobrevaloradas, delirios, ideacion suicida/homicida)..."},
+  {id:"mse_percepcion",sec:"mse",label:"Percepciones",type:"long",ph:"Alucinaciones (modalidad, contenido, frecuencia), ilusiones, despersonalizacion, desrealizacion..."},
+  {id:"mse_cognicion",sec:"mse",label:"Cognicion",type:"long",ph:"Orientacion, atencion, concentracion, memoria, funciones ejecutivas. Resultados de pruebas si se aplicaron..."},
+  {id:"mse_insight",sec:"mse",label:"Insight y juicio",type:"long",ph:"Conciencia de enfermedad, actitud hacia el tratamiento, capacidad de toma de decisiones..."},
+
+  // FORMULACION Y PLAN
+  {id:"form_formulacion",sec:"fpl",label:"Formulacion del caso",type:"long",ph:"Integracion biopsicosocial: factores predisponentes, precipitantes, perpetuantes y protectores. Hipotesis diagnostica integrada..."},
+  {id:"form_riesgo",sec:"fpl",label:"Evaluacion de riesgo",type:"long",ph:"Riesgo suicida, riesgo de violencia, riesgo de vulnerabilidad. Factores de riesgo y proteccion. Plan de seguridad..."},
+  {id:"form_plan",sec:"fpl",label:"Plan de tratamiento",type:"long",ph:"Farmacologico, psicoterapeutico, social, rehabilitacion. Derivaciones, seguimiento, psicoeducacion..."},
+  {id:"form_notas",sec:"fpl",label:"Notas adicionales",type:"long",ph:"Cualquier otra observacion relevante..."},
+];
+
+const SECTIONS = [
+  {id:"mc",label:"Motivo de Consulta e Historia",short:"Consulta",color:"#0f766e"},
+  {id:"dem",label:"Datos Demograficos",short:"Demograficos",color:"#1e3a5f"},
+  {id:"hx",label:"Historia Clinica",short:"Historia",color:"#374151"},
+  {id:"scr",label:"Cribado de Modulos",short:"Cribado",color:"#7c3aed"},
+  {id:"psy",label:"Modulo Psicosis",short:"Psicosis",color:"#b91c1c"},
+  {id:"man",label:"Modulo Mania / Hipomania",short:"Mania",color:"#d97706"},
+  {id:"dep",label:"Modulo Depresion",short:"Depresion",color:"#2563eb"},
+  {id:"anx",label:"Modulo Ansiedad",short:"Ansiedad",color:"#059669"},
+  {id:"sub",label:"Modulo Sustancias",short:"Sustancias",color:"#9333ea"},
+  {id:"per",label:"Modulo Personalidad",short:"Personalidad",color:"#db2777"},
+  {id:"cog",label:"Modulo Cognitivo",short:"Cognitivo",color:"#475569"},
+  {id:"mse",label:"Examen Mental (Narrativa)",short:"Ex. Mental",color:"#0369a1"},
+  {id:"fpl",label:"Formulacion y Plan",short:"Formulacion",color:"#4338ca"},
+];
+
+// ══════════════════════════════════════════════════════════
+// DIAGNOSTIC ALGORITHMS (from JSX)
+// ══════════════════════════════════════════════════════════
+
+function bool(v){return v===true}
+function count(){return Array.from(arguments).filter(bool).length}
+
+function runAlgorithms(r){
+  const frs=count(r.h_aud3,r.h_audrun,r.d_control,r.d_insert,r.d_withd,r.d_broad);
+  const psySx=count(r.h_aud3||r.h_audrun||r.h_aud2||r.h_vis||r.h_other,
+    r.d_control||r.d_insert||r.d_withd||r.d_broad||r.d_persec||r.d_ref||r.d_grand||r.d_nihil||r.d_soma||r.d_biz,
+    r.td_incoh||r.td_loose,r.disorg||r.catatonia,
+    r.neg_flat||r.neg_avol||r.neg_alog);
+  const mustHave=bool(r.h_aud3)||bool(r.h_audrun)||bool(r.h_aud2)||bool(r.h_vis)||
+    bool(r.d_control)||bool(r.d_insert)||bool(r.d_withd)||bool(r.d_broad)||
+    bool(r.d_persec)||bool(r.d_ref)||bool(r.d_grand)||bool(r.d_biz)||bool(r.td_incoh);
+  const negN=count(r.neg_flat,r.neg_avol,r.neg_anhed,r.neg_alog,r.neg_soc);
+  const durWk=Number(r.p_dur_wk)||0;
+  const depN=count(r.dep_mood,r.dep_anhed,r.dep_wt,r.dep_sleep,r.dep_pm,r.dep_fat,r.dep_worth,r.dep_conc,r.dep_si);
+  const manN=count(r.m_grand,r.m_sleep,r.m_speech,r.m_racing,r.m_distr,r.m_activ,r.m_risk);
+  const mDur=Number(r.m_dur)||0;
+  const moodOk=bool(r.m_elev)||bool(r.m_irr);
+  const maniaEp=moodOk&&((bool(r.m_elev)&&manN>=3)||(bool(r.m_irr)&&manN>=4))&&(mDur>=7||bool(r.m_hosp));
+  const hypoEp=moodOk&&((bool(r.m_elev)&&manN>=3)||(bool(r.m_irr)&&manN>=4))&&mDur>=4&&!bool(r.m_hosp)&&!bool(r.m_dysf);
+  const mddEp=(bool(r.dep_mood)||bool(r.dep_anhed))&&depN>=5&&bool(r.dep_dysf);
+  const icd=[],dsm=[];
+  const schizoBase=(frs>=1||(psySx>=2&&mustHave))&&!bool(r.p_subst);
+  const schizoDSM=psySx>=2&&mustHave&&bool(r.p_dysf)&&!bool(r.p_subst);
+  if(schizoBase&&(maniaEp||mddEp)){
+    icd.push({code:"F25.0",name:"T. esquizoafectivo, tipo maniaco",conf:"probable"});
+    icd.push({code:"F25.1",name:"T. esquizoafectivo, tipo depresivo",conf:"posible"});
+    dsm.push({code:"295.70",name:"Trastorno esquizoafectivo",conf:"probable"});
+  } else if(schizoBase&&durWk>=4){
+    if(durWk>=26){
+      const sub=negN>=3?"F20.5 (Esquizofrenia residual)":"F20.0 (Esquizofrenia paranoide)";
+      icd.push({code:sub.split(" ")[0],name:sub.slice(7),conf:"probable"});
+    } else {
+      icd.push({code:"F23",name:"T. psicotico agudo y transitorio",conf:"probable"});
+    }
+    if(schizoDSM&&durWk>=26) dsm.push({code:"295.90",name:"Esquizofrenia",conf:"probable"});
+    else if(schizoDSM&&durWk>=4) dsm.push({code:"295.40",name:"T. esquizofreniforme",conf:"probable"});
+    else if(durWk>=1&&durWk<4) dsm.push({code:"298.8",name:"T. psicotico breve",conf:"probable"});
+  } else if(bool(r.scr_psy)&&durWk>=4&&!bool(r.p_subst)){
+    icd.push({code:"F22",name:"T. delirante persistente",conf:"posible"});
+    dsm.push({code:"297.1",name:"T. delirante",conf:"posible"});
+  }
+  if(maniaEp&&!schizoBase){
+    if(mddEp){icd.push({code:"F31",name:"T. bipolar, episodio actual maniaco",conf:"probable"});dsm.push({code:"296.4x",name:"T. bipolar tipo I",conf:"probable"});}
+    else{icd.push({code:"F30",name:"Episodio maniaco",conf:"probable"});dsm.push({code:"296.41",name:"T. bipolar tipo I (episodio maniaco)",conf:"probable"});}
+  } else if(hypoEp&&mddEp&&!schizoBase){
+    icd.push({code:"F31.8",name:"T. bipolar tipo II (hipomania + depresion)",conf:"probable"});
+    dsm.push({code:"296.89",name:"T. bipolar tipo II",conf:"probable"});
+  } else if(mddEp&&!maniaEp&&!hypoEp&&!schizoBase){
+    const sev=depN>=8?"grave":depN>=6?"moderado":"leve";
+    if(bool(r.dep_recur)){
+      icd.push({code:"F33."+(depN>=8?2:depN>=6?1:0),name:"T. depresivo recurrente, ep. actual "+sev,conf:"probable"});
+      dsm.push({code:"296.3x",name:"T. depresion mayor recurrente ("+sev+")",conf:"probable"});
+    } else {
+      icd.push({code:"F32."+(depN>=8?2:depN>=6?1:0),name:"Episodio depresivo "+sev,conf:"probable"});
+      dsm.push({code:"296.2x",name:"T. depresion mayor, ep. unico ("+sev+")",conf:"probable"});
+    }
+  }
+  if(bool(r.anx_ocd_o)&&bool(r.anx_ocd_c)){icd.push({code:"F42",name:"T. obsesivo-compulsivo",conf:"probable"});dsm.push({code:"300.3",name:"T. obsesivo-compulsivo",conf:"probable"});}
+  if(bool(r.anx_trauma)&&bool(r.ptsd_reexp)&&bool(r.ptsd_avd)&&bool(r.ptsd_arous)&&(Number(r.ptsd_dur)||0)>=1){icd.push({code:"F43.1",name:"T. de estres postraumatico",conf:"probable"});dsm.push({code:"309.81",name:"T. de estres postraumatico",conf:"probable"});}
+  if(bool(r.anx_panic)&&bool(r.anx_antcp)){const t=bool(r.anx_agora)?"F40.01":"F41.0";icd.push({code:t,name:"T. de panico",conf:"probable"});dsm.push({code:"300.01",name:"T. de panico",conf:"probable"});}
+  if(bool(r.anx_social)){icd.push({code:"F40.1",name:"Fobia social",conf:"probable"});dsm.push({code:"300.23",name:"T. de ansiedad social",conf:"probable"});}
+  if(bool(r.anx_specif)){icd.push({code:"F40.2",name:"Fobia especifica",conf:"probable"});dsm.push({code:"300.29",name:"Fobia especifica",conf:"probable"});}
+  if(bool(r.anx_gad)&&parseInt(r.anx_gad_n||"0")>=3){icd.push({code:"F41.1",name:"T. de ansiedad generalizada",conf:"probable"});dsm.push({code:"300.02",name:"T. de ansiedad generalizada",conf:"probable"});}
+  const anySub=count(r.sub_alc,r.sub_can,r.sub_stim,r.sub_opio,r.sub_sed,r.sub_other)>0;
+  if(anySub){
+    if(bool(r.sub_tol)||bool(r.sub_with)||(bool(r.sub_ctrl)&&bool(r.sub_socd))){icd.push({code:"F1x.2",name:"Sindrome de dependencia a sustancias",conf:"probable"});dsm.push({code:"F1x.20",name:"T. por uso de sustancias (moderado-grave)",conf:"probable"});}
+    else if(bool(r.sub_socd)){icd.push({code:"F1x.1",name:"Uso nocivo de sustancias",conf:"posible"});dsm.push({code:"F1x.10",name:"T. por uso de sustancias (leve)",conf:"posible"});}
+  }
+  if(bool(r.sub_psy)){icd.push({code:"F1x.5",name:"T. psicotico inducido por sustancias",conf:"probable"});dsm.push({code:"F1x.x59",name:"T. psicotico inducido por sustancias",conf:"probable"});}
+  const pBase=bool(r.per_early)&&bool(r.per_perv);
+  if(pBase||bool(r.scr_per)){
+    if(bool(r.per_A_par)){icd.push({code:"F60.0",name:"T. paranoide de personalidad",conf:"probable"});dsm.push({code:"301.0",name:"T. de personalidad paranoide",conf:"probable"});}
+    if(bool(r.per_A_szd)){icd.push({code:"F60.1",name:"T. esquizoide de personalidad",conf:"probable"});dsm.push({code:"301.20",name:"T. de personalidad esquizoide",conf:"probable"});}
+    if(bool(r.per_A_szt)){icd.push({code:"F21",name:"T. esquizotipico",conf:"probable"});dsm.push({code:"301.22",name:"T. de personalidad esquizotipico",conf:"probable"});}
+    if(bool(r.per_B_ast)){icd.push({code:"F60.2",name:"T. disocial de personalidad",conf:"probable"});dsm.push({code:"301.7",name:"T. de personalidad antisocial",conf:"probable"});}
+    if(bool(r.per_B_bpd)){icd.push({code:"F60.31",name:"T. limite de personalidad (BPD)",conf:"probable"});dsm.push({code:"301.83",name:"T. de personalidad limite",conf:"probable"});}
+    if(bool(r.per_B_his)){icd.push({code:"F60.4",name:"T. histrionico de personalidad",conf:"probable"});dsm.push({code:"301.50",name:"T. de personalidad histrionico",conf:"probable"});}
+    if(bool(r.per_B_nar)){icd.push({code:"F60.8",name:"T. narcisista de personalidad",conf:"posible"});dsm.push({code:"301.81",name:"T. de personalidad narcisista",conf:"probable"});}
+    if(bool(r.per_C_avd)){icd.push({code:"F60.6",name:"T. ansioso-evitativo de personalidad",conf:"probable"});dsm.push({code:"301.82",name:"T. de personalidad evitativa",conf:"probable"});}
+    if(bool(r.per_C_dep)){icd.push({code:"F60.7",name:"T. dependiente de personalidad",conf:"probable"});dsm.push({code:"301.6",name:"T. de personalidad dependiente",conf:"probable"});}
+    if(bool(r.per_C_ocp)){icd.push({code:"F60.5",name:"T. anankastico (TOCP) de personalidad",conf:"probable"});dsm.push({code:"301.4",name:"T. de personalidad obsesivo-compulsivo",conf:"probable"});}
+  }
+  if(bool(r.scr_cog)&&bool(r.cog_mem)){
+    if(bool(r.cog_cons)&&bool(r.cog_fluct)&&r.cog_onset==="Agudo (horas-dias)"){icd.push({code:"F05",name:"Delirium",conf:"probable"});dsm.push({code:"293.0",name:"Delirium",conf:"probable"});}
+    else if(bool(r.cog_prog)){icd.push({code:"F00-F03",name:"Demencia (subtipo segun etiologia)",conf:"probable"});dsm.push({code:"294.xx",name:"T. neurocognitivo mayor (demencia)",conf:"probable"});}
+    else{icd.push({code:"F06",name:"T. cognitivo de etiologia organica",conf:"posible"});dsm.push({code:"331.83",name:"T. neurocognitivo leve",conf:"posible"});}
+  }
+  return {icd,dsm};
+}
+
+// ══════════════════════════════════════════════════════════
+// APP STATE
+// ══════════════════════════════════════════════════════════
+
+let state = {
+  view: 'cases',      // cases | form | results
+  cases: [],
+  form: {},
+  secIdx: 0,
+  editId: null,
+  current: null,
+  deleteConfirm: null,
+};
+
+function loadCases(){
+  try{const r=localStorage.getItem('opcrit_v2_cases');if(r)state.cases=JSON.parse(r);}catch{}
+}
+function saveCases(){localStorage.setItem('opcrit_v2_cases',JSON.stringify(state.cases));}
+
+function getVisibleSections(){
+  return SECTIONS.filter(s=>ITEMS.some(i=>i.sec===s.id&&(!i.show||i.show(state.form))));
+}
+function getSecItems(secId){
+  return ITEMS.filter(i=>i.sec===secId&&(!i.show||i.show(state.form)));
+}
+function countAnswered(secId){
+  return getSecItems(secId).filter(i=>{const v=state.form[i.id];return v!==undefined&&v!==null&&v!=='';}).length;
+}
+function totalStats(){
+  const vis=ITEMS.filter(i=>!i.show||i.show(state.form));
+  const ans=vis.filter(i=>{const v=state.form[i.id];return v!==undefined&&v!==null&&v!=='';});
+  return {total:vis.length,answered:ans.length};
+}
+
+// ══════════════════════════════════════════════════════════
+// RENDER ENGINE
+// ══════════════════════════════════════════════════════════
+
+const $=id=>document.getElementById(id);
+const app=()=>document.getElementById('app');
+
+function render(){
+  if(state.view==='cases') renderCases();
+  else if(state.view==='form') renderForm();
+  else if(state.view==='results') renderResults();
+}
+
+// ── CASES VIEW ──
+function renderCases(){
+  const c=state.cases;
+  let rows='';
+  if(c.length===0){
+    rows=`<div class="cases-empty"><p style="font-size:2rem">&#128203;</p><p>No hay evaluaciones guardadas.</p><button class="btn btn-primary" onclick="startNew()">Comenzar primera evaluacion</button></div>`;
+  } else {
+    rows=`<div style="background:var(--card);border-radius:12px;border:1px solid var(--border);overflow:hidden">
+    <table><thead><tr><th>Caso</th><th>Fecha</th><th>Paciente</th><th>Diagnosticos ICD-10</th><th>Modulos</th><th></th></tr></thead><tbody>`;
+    for(const cs of c){
+      const mods=['scr_psy','scr_man','scr_dep','scr_anx','scr_sub','scr_per','scr_cog']
+        .filter(k=>cs.responses[k]===true)
+        .map(k=>({scr_psy:'Psicosis',scr_man:'Mania',scr_dep:'Dep.',scr_anx:'Ansiedad',scr_sub:'Sust.',scr_per:'Pers.',scr_cog:'Cog.'}[k]));
+      const dxChips=cs.icd.slice(0,3).map(d=>`<span class="dx-chip">${d.code.split(' ')[0]}</span>`).join('')+(cs.icd.length>3?`<span style="color:var(--muted);font-size:.72rem"> +${cs.icd.length-3}</span>`:'');
+      const modChips=mods.map(m=>`<span class="mod-chip">${m}</span>`).join('');
+      rows+=`<tr>
+        <td style="font-family:monospace;color:var(--muted);font-size:.75rem">#${cs.id.slice(-6)}</td>
+        <td>${new Date(cs.createdAt).toLocaleDateString('es-PE')}</td>
+        <td>${cs.responses.sex||'—'} · ${cs.responses.age?cs.responses.age+' a.':'—'}</td>
+        <td>${cs.icd.length>0?dxChips:'<span style="color:#cbd5e1;font-size:.72rem">Sin criterios</span>'}</td>
+        <td>${modChips}</td>
+        <td style="text-align:right;white-space:nowrap">
+          <button class="link" onclick="viewCase('${cs.id}')">Ver</button>
+          <button class="link" onclick="editCase('${cs.id}')" style="margin-left:8px">Editar</button>
+          <button class="link link-red" onclick="confirmDelete('${cs.id}')" style="margin-left:8px">Eliminar</button>
+        </td></tr>`;
+    }
+    rows+=`</tbody></table></div>`;
+  }
+
+  app().innerHTML=`
+  <div class="topbar">
+    <div><h1>&#129504; OPCRIT+ Web <span class="tag">ICD-10 · DSM-5</span></h1>
+    <div class="sub">${ITEMS.length} items · ${SECTIONS.length} modulos</div></div>
+    <div style="display:flex;gap:8px">
+      ${c.length>0?`<button class="btn btn-sm" onclick="exportCSV()">&#11015; CSV (${c.length})</button>`:''}
+      <button class="btn btn-primary" onclick="startNew()">+ Nueva evaluacion</button>
+    </div>
+  </div>
+  <div class="wrap">${rows}
+    <p class="warn">&#9888; Herramienta de apoyo a investigacion. Los algoritmos diagnosticos son aproximaciones basadas en criterios operacionales publicados en ICD-10/DSM-5. Datos almacenados localmente en el navegador.</p>
+  </div>
+  ${state.deleteConfirm?`<div class="modal-bg" onclick="state.deleteConfirm=null;render()"><div class="modal" onclick="event.stopPropagation()"><h3>Eliminar evaluacion?</h3><p>Esta accion no se puede deshacer.</p><div class="actions"><button class="btn btn-sm" onclick="state.deleteConfirm=null;render()">Cancelar</button><button class="btn btn-sm btn-red" onclick="doDelete()">Eliminar</button></div></div></div>`:''}`;
+}
+
+// ── FORM VIEW ──
+function renderForm(){
+  const visSecs=getVisibleSections();
+  if(state.secIdx>=visSecs.length) state.secIdx=visSecs.length-1;
+  if(state.secIdx<0) state.secIdx=0;
+  const sec=visSecs[state.secIdx];
+  const meta=SECTIONS.find(s=>s.id===sec.id);
+  const its=getSecItems(sec.id);
+  const st=totalStats();
+  const pct=st.total>0?Math.round(st.answered/st.total*100):0;
+
+  let sidebar='';
+  visSecs.forEach((s,i)=>{
+    const m=SECTIONS.find(x=>x.id===s.id);
+    const a=countAnswered(s.id),t=getSecItems(s.id).length;
+    sidebar+=`<button class="${i===state.secIdx?'active':''}" onclick="state.secIdx=${i};render()"><span>${m.short}</span>${a>0?`<span class="cnt">${a}/${t}</span>`:''}</button>`;
+  });
+
+  let items='';
+  for(const it of its){
+    if(it.type==='bool'){
+      const v=state.form[it.id];
+      const cls=v===true?'on':v==='unk'?'unk':'';
+      items+=`<div class="chk ${cls}" onclick="toggleBool('${it.id}')">
+        <div class="box"></div>
+        <div class="lbl">${it.label}</div>
+        ${it.tip?`<span class="tip" title="${it.tip}">&#9312;</span>`:''}
+        <div class="unk-btn" onclick="event.stopPropagation();setUnk('${it.id}')">?</div>
+      </div>`;
+    } else if(it.type==='sel'){
+      let pills='';
+      for(const o of it.opts){
+        pills+=`<span class="pill${state.form[it.id]===o?' on':''}" onclick="setField('${it.id}','${o.replace(/'/g,"\\'")}')">${o}</span>`;
+      }
+      items+=`<div class="field-row"><div class="lbl">${it.label}</div><div class="pill-group">${pills}</div></div>`;
+    } else if(it.type==='num'){
+      items+=`<div class="field-row"><div class="lbl">${it.label}</div><input type="number" value="${state.form[it.id]??''}" min="${it.min??0}" ${it.max?'max="'+it.max+'"':''} onchange="setNum('${it.id}',this.value)"></div>`;
+    } else if(it.type==='long'){
+      items+=`<div class="long-field"><div class="lbl">${it.label}</div><textarea placeholder="${it.ph||''}" oninput="setLong('${it.id}',this.value)">${state.form[it.id]||''}</textarea></div>`;
+    }
+  }
+
+  app().innerHTML=`
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:12px">
+      <button class="btn btn-sm" onclick="state.view='cases';render()" style="font-size:1.1rem;padding:4px 10px">&#8592;</button>
+      <div><span style="font-size:.88rem;font-weight:600">${state.editId?'Editar evaluacion':'Nueva evaluacion OPCRIT+'}</span>
+        <div class="progress-mini"><div class="bar"><div class="bar-fill" style="width:${pct}%"></div></div><span>${st.answered}/${st.total} items</span></div>
+      </div>
+    </div>
+    <button class="btn btn-green" onclick="handleSave()">Guardar y diagnosticar</button>
+  </div>
+  <div class="form-layout">
+    <aside class="sidebar">${sidebar}</aside>
+    <main class="form-main"><div class="form-card">
+      <div class="sec-title" style="color:${meta.color}">${meta.label}</div>
+      <div class="sec-sub">${its.length} items en esta seccion</div>
+      ${items}
+      <div class="form-nav">
+        ${state.secIdx>0?`<button class="btn btn-sm" onclick="state.secIdx--;render()">&#8592; ${SECTIONS.find(x=>x.id===visSecs[state.secIdx-1]?.id)?.short||''}</button>`:'<div></div>'}
+        ${state.secIdx<visSecs.length-1?`<button class="btn btn-sm btn-primary" onclick="state.secIdx++;render()">${SECTIONS.find(x=>x.id===visSecs[state.secIdx+1]?.id)?.short||''} &#8594;</button>`:`<button class="btn btn-sm btn-green" onclick="handleSave()">&#10003; Guardar y ver diagnostico</button>`}
+      </div>
+    </div></main>
+  </div>`;
+}
+
+// ── RESULTS VIEW ──
+function renderResults(){
+  const c=state.current;if(!c)return;
+  const r=c.responses;
+  const modules=[
+    {key:"scr_psy",label:"Psicosis",color:"#b91c1c"},
+    {key:"scr_man",label:"Mania",color:"#d97706"},
+    {key:"scr_dep",label:"Depresion",color:"#2563eb"},
+    {key:"scr_anx",label:"Ansiedad",color:"#059669"},
+    {key:"scr_sub",label:"Sustancias",color:"#9333ea"},
+    {key:"scr_per",label:"Personalidad",color:"#db2777"},
+    {key:"scr_cog",label:"Cognitivo",color:"#475569"},
+  ];
+  const modBadges=modules.map(m=>{
+    const on=r[m.key]===true;
+    return `<span class="mod-badge${on?' active':''}" style="${on?'background:'+m.color:''}">${on?'&#10003; ':'&#9675; '}${m.label}</span>`;
+  }).join('');
+
+  function dxList(arr){
+    if(!arr.length) return '<p style="color:var(--muted);font-style:italic;font-size:.85rem">No se cumplen criterios con los datos ingresados.</p>';
+    return arr.map(d=>`<div class="dx-item ${d.conf}"><div style="display:flex;justify-content:space-between;align-items:center"><span class="code">${d.code}</span><span class="conf ${d.conf}">${d.conf}</span></div><div class="name">${d.name}</div></div>`).join('');
+  }
+
+  app().innerHTML=`
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:12px">
+      <button class="btn btn-sm" onclick="state.view='cases';render()" style="font-size:1.1rem;padding:4px 10px">&#8592;</button>
+      <div><span style="font-size:.88rem;font-weight:600">Resultados diagnosticos</span>
+        <div style="font-size:.72rem;color:var(--muted)">#${c.id.slice(-6)} · ${new Date(c.createdAt).toLocaleDateString('es-PE')}</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-sm" onclick="editCase('${c.id}')">Editar</button>
+      <button class="btn btn-sm" onclick="exportWord('${c.id}')">&#128196; Word</button>
+      <button class="btn btn-sm" onclick="exportCSV()">&#11015; CSV</button>
+    </div>
+  </div>
+  <div class="wrap">
+    <div style="background:var(--card);border-radius:12px;border:1px solid var(--border);padding:16px;margin-bottom:16px">
+      <div class="summary-grid">
+        <div><div class="stat">Sexo</div><div class="val">${r.sex||'—'}</div></div>
+        <div><div class="stat">Edad</div><div class="val">${r.age?r.age+' anos':'—'}</div></div>
+        <div><div class="stat">Inicio</div><div class="val">${r.age_onset?r.age_onset+' anos':'—'}</div></div>
+        <div><div class="stat">Curso</div><div class="val">${r.course||'—'}</div></div>
+        <div><div class="stat">F. premorbido</div><div class="val">${r.premorbid||'—'}</div></div>
+      </div>
+    </div>
+    <div style="background:var(--card);border-radius:12px;border:1px solid var(--border);padding:16px;margin-bottom:16px">
+      <div style="font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:8px">Modulos activados en cribado</div>
+      ${modBadges}
+    </div>
+    <div class="res-grid">
+      <div class="res-card"><h3>ICD-10</h3>${dxList(c.icd)}</div>
+      <div class="res-card"><h3>DSM-5</h3>${dxList(c.dsm)}</div>
+    </div>
+    <p class="warn">&#9888; Los diagnosticos son generados automaticamente por algoritmos aproximados basados en criterios publicados en ICD-10/DSM-5. No son equivalentes a los algoritmos propietarios de OPCRIT+. Validar antes de uso en investigacion formal.</p>
+  </div>`;
+}
+
+// ══════════════════════════════════════════════════════════
+// ACTIONS
+// ══════════════════════════════════════════════════════════
+
+function startNew(){state.form={};state.secIdx=0;state.editId=null;state.view='form';render();}
+function editCase(id){const c=state.cases.find(x=>x.id===id);if(!c)return;state.form={...c.responses};state.secIdx=0;state.editId=c.id;state.view='form';render();}
+function viewCase(id){const c=state.cases.find(x=>x.id===id);if(!c)return;state.current=c;state.view='results';render();}
+function confirmDelete(id){state.deleteConfirm=id;render();}
+function doDelete(){state.cases=state.cases.filter(c=>c.id!==state.deleteConfirm);saveCases();state.deleteConfirm=null;render();}
+
+function toggleBool(id){
+  const v=state.form[id];
+  if(v===true) state.form[id]=false;
+  else if(v===false) state.form[id]=undefined;
+  else state.form[id]=true;
+  render();
+}
+function setUnk(id){
+  state.form[id]=state.form[id]==='unk'?undefined:'unk';
+  render();
+}
+function setField(id,val){
+  state.form[id]=state.form[id]===val?undefined:val;
+  render();
+}
+function setNum(id,val){
+  state.form[id]=val===''?undefined:Number(val);
+  render();
+}
+function setLong(id,val){
+  state.form[id]=val||undefined;
+  // No re-render on textarea input — would lose cursor position
+}
+
+function handleSave(){
+  const id=state.editId||Date.now().toString();
+  const {icd,dsm}=runAlgorithms(state.form);
+  const c={id,createdAt:state.editId?(state.cases.find(x=>x.id===state.editId)?.createdAt||new Date().toISOString()):new Date().toISOString(),updatedAt:new Date().toISOString(),responses:state.form,icd,dsm};
+  if(state.editId) state.cases=state.cases.map(x=>x.id===state.editId?c:x);
+  else state.cases.push(c);
+  saveCases();
+  state.current=c;
+  state.view='results';
+  render();
+}
+
+// ── EXPORTS ──
+function exportCSV(){
+  const ids=ITEMS.map(i=>i.id);
+  const header=["caso_id","fecha","sexo","edad",...ids,"dx_icd10","dx_dsm5"];
+  const rows=state.cases.map(c=>[
+    c.id.slice(-8),new Date(c.createdAt).toLocaleDateString("es-PE"),c.responses.sex||"",c.responses.age||"",
+    ...ids.map(id=>{const v=c.responses[id];if(v===true)return"1";if(v===false)return"0";if(v==="unk")return"9";return v??""}),
+    c.icd.map(d=>d.code+": "+d.name+" ["+d.conf+"]").join(" | "),
+    c.dsm.map(d=>d.code+": "+d.name+" ["+d.conf+"]").join(" | "),
+  ]);
+  const csv=[header,...rows].map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(",")).join("\n");
+  const blob=new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8;"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="OPCRIT_"+new Date().toISOString().slice(0,10)+".csv";a.click();
+}
+
+function exportWord(caseId){
+  const c=state.cases.find(x=>x.id===caseId);if(!c)return;
+  const r=c.responses;
+  let h='';
+  for(const sec of SECTIONS){
+    const its=ITEMS.filter(i=>i.sec===sec.id&&(!i.show||i.show(r)));
+    if(!its.length)continue;
+    h+=`<h2 style="color:${sec.color};border-bottom:2px solid ${sec.color};padding-bottom:4px;margin-top:20px;font-size:14px">${sec.label}</h2>`;
+    for(const it of its){
+      const v=r[it.id];
+      let display='No registrado';
+      if(v===true)display='<b style="color:#059669">Si</b>';
+      else if(v===false)display='No';
+      else if(v==='unk')display='<i style="color:#d97706">Desconocido</i>';
+      else if(v!==undefined&&v!==null&&v!=='')display=String(v).replace(/\n/g,'<br>');
+      if(it.type==='long'){
+        h+=`<p style="margin:6px 0 2px;font-size:12px;font-weight:bold">${it.label}:</p><p style="margin:0 0 10px 12px;font-size:12px;line-height:1.6;white-space:pre-wrap">${display}</p>`;
+      } else {
+        h+=`<p style="margin:2px 0;font-size:12px"><b>${it.label}:</b> ${display}</p>`;
+      }
+    }
+  }
+  h+=`<h2 style="color:#1e3a5f;border-bottom:2px solid #1e3a5f;padding-bottom:4px;margin-top:24px;font-size:14px">Diagnosticos Algoritmicos</h2>`;
+  h+=`<h3 style="font-size:13px;color:#4f46e5;margin-top:12px">ICD-10</h3>`;
+  if(c.icd.length)c.icd.forEach(d=>{h+=`<p style="font-size:12px;margin:2px 0"><b>${d.code}</b> — ${d.name} <i>[${d.conf}]</i></p>`;});
+  else h+=`<p style="font-size:12px;color:#999">No se cumplen criterios.</p>`;
+  h+=`<h3 style="font-size:13px;color:#4f46e5;margin-top:12px">DSM-5</h3>`;
+  if(c.dsm.length)c.dsm.forEach(d=>{h+=`<p style="font-size:12px;margin:2px 0"><b>${d.code}</b> — ${d.name} <i>[${d.conf}]</i></p>`;});
+  else h+=`<p style="font-size:12px;color:#999">No se cumplen criterios.</p>`;
+
+  const full=`<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+<head><meta charset="utf-8"><style>body{font-family:Calibri,Arial,sans-serif;font-size:12px;color:#333;margin:40px}h1{font-size:18px;color:#1e3a5f;text-align:center}p{line-height:1.5}</style></head><body>
+<h1>OPCRIT+ — Evaluacion Diagnostica</h1>
+<p style="text-align:center;color:#666;font-size:11px">Caso #${c.id.slice(-6)} | Fecha: ${new Date(c.createdAt).toLocaleDateString('es-PE')} | ${r.sex||''} ${r.age?', '+r.age+' anos':''}</p><hr>${h}
+<br><br><p style="font-size:10px;color:#999;text-align:center">Generado por OPCRIT+ Web App</p></body></html>`;
+  const blob=new Blob([full],{type:'application/msword'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='OPCRIT_'+c.id.slice(-6)+'_'+new Date(c.createdAt).toISOString().slice(0,10)+'.doc';document.body.appendChild(a);a.click();document.body.removeChild(a);
+}
+
+// ── INIT ──
+loadCases();
+render();
+</script>
+</body>
+</html>
